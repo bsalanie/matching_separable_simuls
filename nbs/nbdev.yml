@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "matching_separable_simuls"
+  site-url: "https://bsalanie.github.io/matching_separable_simuls"
+  description: "Simulations for Galichon-Salanie paper on estimating separable matching models"
+  repo-branch: main
+  repo-url: "https://github.com/bsalanie/matching_separable_simuls"
