@@ -18,7 +18,10 @@ generates $S$ datasets from the fitted model, and it uses them to test
 the estimation methods presented in Galichon-Salanié 2022.
 
 ``` python
-1+1
+data_dir = get_root_dir() / "matching_separable_simuls" / "ChooSiow70nNdata"
 ```
 
-    2
+``` python
+nx, my = read_margins(data_dir)
+muxy, varmus = read_marriages(data_dir)
+```
