@@ -17,10 +17,9 @@ def get_root_dir(
 ) -> Path:
     """ returns the package directory """
     root_dir = Path.cwd().parent
-    if platform in ["linux", "linux2"]:
-        root_dir = Path.cwd().parent.parent
+    if platform in ["linux", "linux2"]:        # we are deploying
+        root_dir = Path.cwd().parent
     return root_dir
-
 
 # %% ../nbs/00_read_data.ipynb 6
 def read_margins(
@@ -38,7 +37,6 @@ def read_marriages(
     muxy = np.loadtxt(data_dir / "muxy70nN.txt")
     varmus = np.loadtxt(data_dir / "varmus70nN.txt")
     return muxy, varmus
-
 
 # %% ../nbs/00_read_data.ipynb 7
 def reshape_varcov(
@@ -80,6 +78,5 @@ def normalize_mus(
     my_norm = my / n_households_pop
     mus_norm = Matching(muxy_norm, nx_norm, my_norm)
     return mus_norm
-
 
 
