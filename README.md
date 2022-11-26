@@ -14,7 +14,7 @@ pip install matching_separable_simuls
 The package reads the marriage patterns from the Choo and Siow 2006
 *Journal of Political Economy* paper for the non-reform states of the
 1970 wave. It fits a parsimonious homoskedastic logit model. Then it
-generates $S$ datasets from the fitted model, and it uses them to test
+generates `S` datasets from the fitted model, and it uses them to test
 the estimation methods presented in Galichon-Salanié 2022.
 
 ## reading the data
@@ -32,12 +32,18 @@ n_households_pop = np.sum(nx) + np.sum(my) - np.sum(muxy)
 mus = Matching(muxy, nx, my)
 mus_norm = normalize_mus(mus, n_households_pop)
 
-varcovs_norm = reshape_varcov(varmus, ncat_men, ncat_women, n_households_pop)
+varcovs_norm = reshape_varcov(varmus, n_types_men, n_types_women, n_households_pop)
 ```
 
 ## fitting a basic model
 
-First we need to generate some basis functions.
+First we need to generate some basis functions. First we
+quantile-transform the margins; then we generate orthogonal polynomials
+on `[0,1]`. We also create variables `1(x=y)` and `max(x-y, 0)`.
+
+``` python
+# base_functions = generate_bases(nx, my, xdeg, ydeg)
+```
 
 ## generating artificial datasets
 

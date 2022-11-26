@@ -14,11 +14,12 @@ from cupid_matching.matching_utils import Matching
 
 # %% ../nbs/00_read_data.ipynb 5
 def get_root_dir(
-) -> Path:
+                    # no argument
+    ) -> Path:      # the package directory
     """ returns the package directory """
     root_dir = Path.cwd().parent
-    if platform in ["linux", "linux2"]:        # we are deploying
-        root_dir = Path.cwd().parent
+#     if platform in ["linux", "linux2"]:        # we are deploying
+#         root_dir = Path.cwd().parent
     return root_dir
 
 # %% ../nbs/00_read_data.ipynb 6
