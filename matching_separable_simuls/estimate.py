@@ -3,14 +3,14 @@
 # %% auto 0
 __all__ = ['legendre_polynomials', 'quantile_transform', 'generate_bases']
 
-# %% ../nbs/01_estimate.ipynb 2
+# %% ../nbs/01_estimate.ipynb 3
 import sys
 import numpy as np
 from fastcore.test import test_close, test_eq
 
 
 
-# %% ../nbs/01_estimate.ipynb 3
+# %% ../nbs/01_estimate.ipynb 4
 def legendre_polynomials(
     x: np.ndarray,      # points where the polynomials are to be evaluated
     max_deg: int,       # maximum degree
@@ -49,8 +49,8 @@ def quantile_transform(
 
 
 def generate_bases(
-    nx: np.array,           # the numbers of men of each type
-    my: np.array,           # the numbers of women of each type
+    nx: np.ndarray,           # the numbers of men of each type
+    my: np.ndarray,           # the numbers of women of each type
     max_deg_x: int,              # the max degree for polynomials in `x`
     max_deg_y: int               # the max degree for polynomials in `y`
     ) -> np.ndarray:        # the matrix of base functions

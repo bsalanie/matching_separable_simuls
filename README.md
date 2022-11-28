@@ -42,8 +42,12 @@ quantile-transform the margins; then we generate orthogonal polynomials
 on `[0,1]`. We also create variables `1(x=y)` and `max(x-y, 0)`.
 
 ``` python
-# base_functions = generate_bases(nx, my, xdeg, ydeg)
+xdeg = 2
+ydeg = 2
+#base_functions = generate_bases(nx, my, xdeg, ydeg)
 ```
+
+    TypeError: return arrays must be of ArrayType
 
 ## generating artificial datasets
 
