@@ -23,15 +23,16 @@ def legendre_polynomials(
         sys.exit(f"legendre_polynomials: points below start of interval")
     if b <  np.max(x):
         sys.exit(f"legendre_polynomials: points above end of interval")
-    p =np.zeros((*x.shape, max_deg + 1))
+    p =np.zeros((x.size, max_deg + 1))
     p0 = np.ones_like(x)
     x_transf = 2.0*(x-a)/(b-a)-1.0
     p1 = x_transf
-    p[:, :, 0], p[:, :, 1] = np.ones_like(x), x_transf
+    p[:, 0] = np.ones_like(x)
+    p[:, 1] = x_transf
     for deg in range(2, max_deg+1):
-        p2 = (2*deg-1)*(p[:, :, deg-1]*x_transf)-(deg-1)*p[:, :, deg-2]
-        p[:, :, deg] = p2/deg
-    polys_p = p[:, :, 1:] if no_constant else p
+        p2 = (2*deg-1)*(p[:, deg-1]*x_transf)-(deg-1)*p[:, deg-2]
+        p[:, deg] = p2/deg
+    polys_p = p[:, 1:] if no_constant else p
     return polys_p
         
     
@@ -60,8 +61,10 @@ def generate_bases(
     types_men, types_women = np.arange(n_types_men), np.arange(n_types_women)
     base_funs = np.zeros((n_types_men, n_types_women, n_bases))
     base_funs[:, :, 0] = 1.0
-    base_funs[:, :, 1] = np.outer(types_men, types_women, lambda x, y: x > y)
-    base_funs[:, :, 2] = np.outer(types_men, types_women, lambda x, y: max(x-y, 0))
+    for y in types_women:
+        base_funs[:, y, 1] = np.where(types_men > y, 1.0, 0.0)
+        base_funs[:, y, 2] = np.where(types_men > y, types_men-y, 0)
+    base_funs[:, :, 2] /= (n_types_men + n_types_women)/2
     # we quantile-transform nx and my
     q_nx = quantile_transform(nx)
     q_my = quantile_transform(my)
@@ -70,9 +73,9 @@ def generate_bases(
     polys_y = legendre_polynomials(q_my, max_deg_y, a=0, no_constant=True)
     i_base = 3
     for deg_x in range(1, max_deg_x + 1):
-        poly_x = polys_x[:, deg_x]
+        poly_x = polys_x[:, deg_x-1]
         for deg_y in range(1, max_deg_y +1):
-            poly_y = polys_y[:, deg_y]
+            poly_y = polys_y[:, deg_y-1]
             base_funs[:, :, i_base] = np.outer(poly_x, poly_y)
             i_base += 1
     return base_funs
