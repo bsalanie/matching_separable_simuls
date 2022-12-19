@@ -44,7 +44,7 @@ def read_marriages(
 def reshape_varcov(
     varmus: np.ndarray,      #  muxy row major, then  mux0, then mu0y packed in both dimensions
     mus: Matching,           #  the original Matching
-    n_households: int        #  the number of households we want
+    n_households: float        #  the number of households we want
 ) -> tuple[np.ndarray]:      #  the 6 constituent blocks of the normalized variance-covariance
     """ splits the variance-covariance matrix 
     and renomalizes for a requested total number of households
@@ -76,7 +76,7 @@ def reshape_varcov(
 # %% ../nbs/00_read_data.ipynb 9
 def rescale_mus(
     mus: Matching,         # muxy, mux0, mu0y
-    n_households: int | float    # the number of households we want
+    n_households: float    # the number of households we want
 ) -> Matching:  # the normalized Matching after rescaling
     """ normalizes the marriages and margins to a requested total number of households"""
     muxy, mux0, mu0y, nx, my = mus.unpack()
@@ -105,7 +105,7 @@ def _get_zeros_mu(
     
 def remove_zero_cells(
     mus: Matching,         # muxy, mux0, mu0y, n, m
-    coeff: int = 100 # default scale factor for delta
+    coeff: float = 100 # default scale factor for delta
 ) -> Matching:  # the transformed muxy, mux0, mu0y, nx, my
     """add small number `delta` to 0-cells to avoid numerical issues"""
     muxy, mux0, mu0y, *_ = mus.unpack()

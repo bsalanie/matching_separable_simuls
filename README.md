@@ -176,14 +176,3 @@ if plot_simuls:
 ![](index_files/figure-commonmark/cell-13-output-2.png)
 
 ## fitting a nested logit model
-
-``` python
-o1 = np.array([True, False])
-o2 = np.array([False, False])
-```
-
-``` python
-[(o1[i] or o2[i]) for i in range(o1.size)]
-```
-
-    [True, False]

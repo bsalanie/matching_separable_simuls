@@ -12,6 +12,7 @@ from fastcore.test import test_eq
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sklearn
 
 from cupid_matching.matching_utils import Matching, _get_singles
 from cupid_matching.model_classes import ChooSiowPrimitives
@@ -26,7 +27,7 @@ from .estimate import generate_bases
 # %% ../nbs/03_plots.ipynb 5
 def plot_simulation_results(
     model_name: str,         # the type of model we are estimating
-    n_households_sim: int    # the number of observed households in the simulation
+    n_households_sim: float    # the number of observed households in the simulation
 ) -> None:
 
     data_dir = get_root_dir() / "matching_separable_simuls" / "ChooSiow70nNdata"
