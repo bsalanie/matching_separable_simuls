@@ -7,6 +7,7 @@ __all__ = ['legendre_polynomials', 'quantile_transform', 'generate_bases']
 import sys
 import numpy as np
 from fastcore.test import test_close, test_eq
+from typing import Tuple, List
 
 
 
@@ -50,35 +51,41 @@ def quantile_transform(
 
 
 def generate_bases(
-    nx: np.ndarray,           # the numbers of men of each type
-    my: np.ndarray,           # the numbers of women of each type
-    max_deg_x: int,              # the max degree for polynomials in `x`
-    max_deg_y: int               # the max degree for polynomials in `y`
-    ) -> np.ndarray:        # the matrix of base functions
+    nx: np.ndarray,                              # the numbers of men of each type
+    my: np.ndarray,                              # the numbers of women of each type
+    degrees: List[Tuple[int, int]],              # the list of degrees for polynomials in `x` and `y`
+    ) -> Tuple[np.ndarray, List[str]]:           # the matrix of base functions and their names
     """ generates the bases for a semilinear specification """
-    n_bases = 3 + max_deg_x * max_deg_y 
+    n_bases = 3 + len(degrees)
     n_types_men, n_types_women = nx.size, my.size
     types_men, types_women = np.arange(n_types_men), np.arange(n_types_women)
     base_funs = np.zeros((n_types_men, n_types_women, n_bases))
+    base_names = [None]*n_bases
     base_funs[:, :, 0] = 1.0
+    base_names[0] = "1"
     for y in types_women:
         base_funs[:, y, 1] = np.where(types_men > y, 1.0, 0.0)
         base_funs[:, y, 2] = np.where(types_men > y, types_men-y, 0)
     base_funs[:, :, 2] /= (n_types_men + n_types_women)/2
+    base_names[1] = "1(x>y)"
+    base_names[2] = "max(x-y,0)"
     # we quantile-transform nx and my
     q_nx = quantile_transform(nx)
     q_my = quantile_transform(my)
-    # and we use the Legendre polynomials on [0,1], except 1
-    polys_x = legendre_polynomials(q_nx, max_deg_x, a=0, no_constant=True)
-    polys_y = legendre_polynomials(q_my, max_deg_y, a=0, no_constant=True)
+    # and we use the Legendre polynomials on [0,1]
+    max_deg_x = max(degree[0] for degree in degrees)
+    max_deg_y = max(degree[1] for degree in degrees)
+    polys_x = legendre_polynomials(q_nx, max_deg_x, a=0)
+    polys_y = legendre_polynomials(q_my, max_deg_y, a=0)
     i_base = 3
-    for deg_x in range(1, max_deg_x + 1):
-        poly_x = polys_x[:, deg_x-1]
-        for deg_y in range(1, max_deg_y +1):
-            poly_y = polys_y[:, deg_y-1]
-            base_funs[:, :, i_base] = np.outer(poly_x, poly_y)
-            i_base += 1
-    return base_funs
+    for deg_x, deg_y in degrees:
+        poly_x = polys_x[:, deg_x]
+        poly_y = polys_y[:, deg_y]
+        base_funs[:, :, i_base] = np.outer(poly_x, poly_y)
+        base_names[i_base] = f"x^{deg_x} * y^{deg_y}"
+        i_base += 1
+    return base_funs, base_names
+
             
     
     

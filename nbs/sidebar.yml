@@ -4,3 +4,4 @@ website:
       - index.ipynb
       - 00_read_data.ipynb
       - 01_estimate.ipynb
+      - 03_plots.ipynb
