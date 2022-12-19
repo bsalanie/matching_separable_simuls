@@ -11,6 +11,8 @@ import numpy as np
 from pathlib import Path
 from typing import Tuple
 
+import sklearn
+
 from cupid_matching.matching_utils import Matching, _compute_margins, _get_singles
 
 # %% ../nbs/00_read_data.ipynb 5
