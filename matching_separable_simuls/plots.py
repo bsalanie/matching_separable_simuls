@@ -34,7 +34,8 @@ def plot_simulation_results(
     results_file = data_dir / f"{model_name}_{n_households_sim}.pkl"
     with open(results_file, "rb") as f:
         results = pickle.load(f)
-    true_coeffs = results['True coeffs']
+    true_coeffs = results['True coeffs']   
+    std_coeffs = np.array([0.114, 0.064, 0.576, 0.188,0.166,0.112,0.306, 0.140])   # TODO: read var-covar
     estim_mde = results['MDE']
     estim_poisson = results['Poisson']
     base_names = results['Base names']
@@ -46,34 +47,50 @@ def plot_simulation_results(
 
     # discard outliers
     beta_err_mde = 4.0*std_mde
-    outliers_mde = (sum(abs(estim_mde - means_mde) > beta_err_mde, 0) > 0)
-    n_outliers_mde = sum(outliers_mde)
+    outliers_mde = np.any(abs(estim_mde - means_mde) > beta_err_mde, 1)    # True if simulation has an outlier 
+    n_outliers_mde = np.sum(outliers_mde)
     print(f"We have a total of {n_outliers_mde} outliers for MDE, " + f" out of {n_sim} simulations.")
     beta_err_poisson = 4.0*std_poisson
-    outliers_poisson = (sum(abs(estim_poisson - means_poisson) > beta_err_poisson, 0) > 0)
+    outliers_poisson = np.any(abs(estim_poisson - means_poisson) > beta_err_poisson, 1)
     n_outliers_poisson = sum(outliers_poisson)
     print(f"We have a total of {n_outliers_poisson} outliers for Poisson, " + f" out of {n_sim} simulations.")
 
-#     if max(n_outliers_mde, n_outliers_poisson) > 0:
-#         mask = [(outliers_mde[i] or outliers_poisson[i]) for i in range(n_sim)]
-#         print(f"We are discarding {sum(mask)} outlier samples")
-#         kept_mde = estim_mde[not mask]
-#         kept_poisson = estim_poisson[not mask]
-#     else:
-#         print(f"We have found no outlier samples")
-    kept_mde = estim_mde
-    kept_poisson = estim_poisson
+    if max(n_outliers_mde, n_outliers_poisson) > 0:
+        kept = [True]*n_sim
+        n_discards = 0
+        for i in range(n_sim):
+            if outliers_mde[i] or outliers_poisson[i]:
+                kept[i] = False
+                n_discards += 1
+        print(f"We are discarding {n_discards} outlier samples")
+        kept_mde = estim_mde[kept]
+        kept_poisson = estim_poisson[kept]
+    else:
+        print(f"We have found no outlier samples")
+        kept_mde = estim_mde
+        kept_poisson = estim_poisson
     n_kept, n_bases = kept_mde.shape
+    nkb = n_kept*n_bases
+    
 
-    true_values = np.tile(true_coeffs, 2 * n_kept)
-    simulation = np.zeros(n_kept*n_bases*2)
+    true_values = np.tile(true_coeffs, 3 * n_kept)
+    simulation = np.zeros(3*nkb)
+    expected = np.zeros(nkb)
     i = 0
-    for i_sim in range(2*n_kept):
-        simulation[i:(i+n_bases)] = np.full(n_bases, i_sim)
+    for i_sim in range(n_kept):
+        i_sim_vec = np.full(n_bases, i_sim)
+        simulation[i:(i+n_bases)] = i_sim_vec
+        simulation[(nkb+i):(nkb+i+n_bases)] = i_sim_vec
+        simulation[(2*nkb+i):(2*nkb+i+n_bases)] = i_sim_vec
+        for i_base in range(n_bases):
+            expected[i+i_base] = np.random.normal(loc=true_coeffs[i_base], scale=std_coeffs[i_base])
+            # TODO: use multivariate normal from covariance matrix
         i += n_bases
-    estimator = np.array(["MDE"]*n_kept*n_bases + ["Poisson"]*n_kept*n_bases)
-    coefficient = base_names*(2*n_kept)
-    estimate = np.concatenate((kept_mde.reshape(n_kept*n_bases), kept_poisson.reshape(n_kept*n_bases)))
+    estimator = np.array(["MDE"]*nkb + ["Poisson"]*nkb + ["Expected"]*nkb)
+    coefficient = base_names*(3*n_kept)
+    estimate = np.concatenate((kept_mde.reshape(nkb), 
+                               kept_poisson.reshape(nkb),
+                              expected.reshape(nkb)))
 
     df_simul_results = pd.DataFrame(
         {

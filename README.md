@@ -172,6 +172,7 @@ if plot_simuls:
 
     We have a total of 0 outliers for MDE,  out of 1000 simulations.
     We have a total of 1 outliers for Poisson,  out of 1000 simulations.
+    We are discarding 1 outlier samples
 
 ![](index_files/figure-commonmark/cell-13-output-2.png)
 
