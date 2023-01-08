@@ -8,6 +8,7 @@ import pickle
 import numpy as np
 from typing import Tuple
 from fastcore.test import test_eq
+from math import sqrt
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,16 +27,20 @@ from .estimate import generate_bases
 
 # %% ../nbs/03_plots.ipynb 5
 def plot_simulation_results(
-    model_name: str,         # the type of model we are estimating
-    n_households_sim: float    # the number of observed households in the simulation
+    model_name: str,            # the type of model we are estimating
+    n_households_sim: float,    # the number of observed households in the simulation
+    value_coeff: float,         # the divider of the smallest positive mu
+    n_households_cupid_obs: float = None,    # the number of observed households in the Cupid dataset
 ) -> None:
 
     data_dir = get_root_dir() / "matching_separable_simuls" / "ChooSiow70nNdata"
-    results_file = data_dir / f"{model_name}_{n_households_sim}.pkl"
+    results_file = data_dir / f"{model_name}_{n_households_sim}_{int(value_coeff)}.pkl"
     with open(results_file, "rb") as f:
         results = pickle.load(f)
-    true_coeffs = results['True coeffs']   
-    std_coeffs = np.array([0.114, 0.064, 0.576, 0.188,0.166,0.112,0.306, 0.140])   # TODO: read var-covar
+    true_coeffs = results['True coeffs']
+    if model_name == "choo_siow_cupid":
+        varcov_coeffs = results['MDE varcov']
+        varcov_rescaled = varcov_coeffs*n_households_cupid_obs/n_households_sim
     estim_mde = results['MDE']
     estim_poisson = results['Poisson']
     base_names = results['Base names']
@@ -72,25 +77,39 @@ def plot_simulation_results(
     n_kept, n_bases = kept_mde.shape
     nkb = n_kept*n_bases
     
-
-    true_values = np.tile(true_coeffs, 3 * n_kept)
-    simulation = np.zeros(3*nkb)
-    expected = np.zeros(nkb)
-    i = 0
-    for i_sim in range(n_kept):
-        i_sim_vec = np.full(n_bases, i_sim)
-        simulation[i:(i+n_bases)] = i_sim_vec
-        simulation[(nkb+i):(nkb+i+n_bases)] = i_sim_vec
-        simulation[(2*nkb+i):(2*nkb+i+n_bases)] = i_sim_vec
-        for i_base in range(n_bases):
-            expected[i+i_base] = np.random.normal(loc=true_coeffs[i_base], scale=std_coeffs[i_base])
-            # TODO: use multivariate normal from covariance matrix
-        i += n_bases
-    estimator = np.array(["MDE"]*nkb + ["Poisson"]*nkb + ["Expected"]*nkb)
-    coefficient = base_names*(3*n_kept)
-    estimate = np.concatenate((kept_mde.reshape(nkb), 
+    rng = np.random.default_rng(67569)
+    
+    if model_name == 'choo_siow_cupid':     # we have an 'Expected' curve in the plot
+        simulation = np.zeros(3*nkb)
+        i = 0
+        for i_sim in range(n_kept):
+            i_sim_vec = np.full(n_bases, i_sim)
+            simulation[i:(i+n_bases)] = i_sim_vec
+            simulation[(nkb+i):(nkb+i+n_bases)] = i_sim_vec
+            simulation[(2*nkb+i):(2*nkb+i+n_bases)] = i_sim_vec
+            i += n_bases
+        expected = np.zeros(nkb)
+        i = 0
+        for i_sim in range(n_kept):
+            expected[i:(i+n_bases)] = rng.multivariate_normal(mean=true_coeffs, cov=varcov_rescaled)
+            i += n_bases
+        estimator = np.array(["MDE"]*nkb + ["Poisson"]*nkb + ["Expected"]*nkb)
+        coefficient = base_names*(3*n_kept)
+        estimate = np.concatenate((kept_mde.reshape(nkb), 
                                kept_poisson.reshape(nkb),
                               expected.reshape(nkb)))
+    else:
+        simulation = np.zeros(2*nkb)
+        i = 0
+        for i_sim in range(n_kept):
+            i_sim_vec = np.full(n_bases, i_sim)
+            simulation[i:(i+n_bases)] = i_sim_vec
+            simulation[(nkb+i):(nkb+i+n_bases)] = i_sim_vec
+            i += n_bases
+        estimator = np.array(["MDE"]*nkb + ["Poisson"]*nkb)
+        coefficient = base_names*(2*n_kept)
+        estimate = np.concatenate((kept_mde.reshape(nkb), 
+                               kept_poisson.reshape(nkb)))
 
     df_simul_results = pd.DataFrame(
         {
@@ -98,8 +117,6 @@ def plot_simulation_results(
             "Estimator": estimator,
             "Parameter": coefficient,
             "Estimate": estimate,
-    #         "Standard Error": stderrs,
-            "True value": true_values,
         }
     )
 
@@ -117,8 +134,6 @@ def plot_simulation_results(
         ax.vlines(true_val, *ax.get_ylim(), color="k", linestyles="dashed")
     g.add_legend()
 
-    plt.savefig("choo_siow_simul_results" + f"_{n_households_sim}" + ".png")
-
-
+    plt.savefig(f"{model_name}_simul_results" + f"_{n_households_sim}_{int(value_coeff)}" + ".png")
 
 
